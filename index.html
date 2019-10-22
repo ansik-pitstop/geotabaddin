@@ -13,9 +13,22 @@
    //         alert("Action performed");
    //     });
    // }
+   const getRequest = function(callbackFinished) {
+     console.log("inside the getRequest");
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            console.log("hello there");
+            callbackFinished();
+    }
+    xmlHttp.open("GET", 'https://stackoverflow.com/', true); // true for asynchronous 
+    xmlHttp.send(null);
+   }
+
    return {
     initialize(api, state, callback) {
-     callback();
+      
+      getRequest(callback);
     },
     focus(api, state) {
      // User interface is available
