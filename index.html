@@ -3,48 +3,53 @@
   <head>
     <title>Custom Page Add-In</title>
     <script>
-      doRedirect = () => {
-        console.log("foo");
-        document.location.href = "https://dashboard.pitstopconnect.com";
-      };
-      geotab.addin.myCustomPage1 = () => {
-        // Initialize required Add-In variables
-        // Example:
-        // var element = document.getElementById("myButton");
-        // if (element) {
-        //     element.addEventListener("click", function (event) {
-        //         event.preventDefault();
-        //         alert("Action performed");
-        //     });
-        // }
-        const getRequest = function(callbackFinished) {
-          console.log("inside the getRequest");
-          var xmlHttp = new XMLHttpRequest();
-          xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-              console.log("hello there");
-            callbackFinished();
+      (() => {
+        doRedirect = () => {
+          console.log("foo");
+          window.frames["foo"].location =
+            "https://dashboard.pitstopconnect.com";
+        };
+        geotab.addin.myCustomPage1 = () => {
+          // Initialize required Add-In variables
+          // Example:
+          // var element = document.getElementById("myButton");
+          // if (element) {
+          //     element.addEventListener("click", function (event) {
+          //         event.preventDefault();
+          //         alert("Action performed");
+          //     });
+          // }
+          const getRequest = function(callbackFinished) {
+            console.log("inside the getRequest");
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function() {
+              if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                console.log("hello there");
+              callbackFinished();
+            };
+            xmlHttp.open("GET", "https://stackoverflow.com/", true); // true for asynchronous
+            xmlHttp.send(null);
           };
-          xmlHttp.open("GET", "https://stackoverflow.com/", true); // true for asynchronous
-          xmlHttp.send(null);
-        };
 
-        return {
-          initialize(api, state, callback) {
-            getRequest(callback);
-          },
-          focus(api, state) {
-            // User interface is available
-          },
-          blur(api, state) {
-            // Save any Add-In state
-          }
+          return {
+            initialize(api, state, callback) {
+              getRequest(callback);
+            },
+            focus(api, state) {
+              // User interface is available
+            },
+            blur(api, state) {
+              // Save any Add-In state
+            }
+          };
         };
-      };
+      })();
     </script>
   </head>
-  <body>
-    <h1>Hello, World!</h1>
-    <button id="myButton" onclick="doRedirect()">Do Action</button>
+  <body onload="doRedirect()">
+    <iframe
+      name="foo"
+      style="position: absolute; height: 100%; width: 100%; border: none"
+    ></iframe>
   </body>
 </html>
