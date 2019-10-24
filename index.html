@@ -5,20 +5,10 @@
     <script>
       (() => {
         doRedirect = () => {
-          console.log("foo");
-          window.frames["foo"].location =
+          window.frames["pitstop"].location =
             "https://dashboard.pitstopconnect.com";
         };
         geotab.addin.myCustomPage1 = () => {
-          // Initialize required Add-In variables
-          // Example:
-          // var element = document.getElementById("myButton");
-          // if (element) {
-          //     element.addEventListener("click", function (event) {
-          //         event.preventDefault();
-          //         alert("Action performed");
-          //     });
-          // }
           function onLoaded(cb) {
             cb();
             doRedirect();
@@ -40,9 +30,9 @@
       })();
     </script>
   </head>
-  <body onload="doRedirect()">
+  <body>
     <iframe
-      name="foo"
+      name="pitstop"
       style="position: absolute; height: 100%; width: 100%; border: none"
     ></iframe>
   </body>
