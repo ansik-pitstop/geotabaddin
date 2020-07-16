@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Custom Page Add-In</title>
+    <script>
+      (() => {
+        doRedirect = () => {
+          window.frames["pitstop"].location =
+            "http://staging.dashboard.pitstopconnect.com";
+        };
+        geotab.addin.myCustomPage1 = () => {
+          function onLoaded(cb) {
+            cb();
+            doRedirect();
+          }
+
+          return {
+            initialize(api, state, callback) {
+              onLoaded(callback);
+            },
+            focus(api, state) {
+              // User interface is available
+              doRedirect();
+            },
+            blur(api, state) {
+              // Save any Add-In state
+            }
+          };
+        };
+      })();
+    </script>
+  </head>
+  <body>
+    <iframe
+      name="pitstop"
+      style="position: absolute; height: 100%; width: 100%; border: none"
+    ></iframe>
+  </body>
+</html>
