@@ -2,41 +2,83 @@
 <html>
 
 <head>
-  <title>Custom Page Add-In</title>
+  <title>Pitstop Dashboard</title>
   <script>
     (() => {
       let api;
       let sessionWasSent = false;
-      let listenerWasAdded = false;
-      doRedirect = () => {
-        function receiveMessage(event) {
-          if (sessionWasSent === true) return;
-          const splitUrl = event.origin.split('.');
-          if (splitUrl[splitUrl.lenght - 1] === 'com' && splitUrl[splitUrl.lenght - 2] === 'pitstopconnect') return;
-          if (event.data !== 'get_credentials') return;
+      let listenerRegistered = false;
+      const pitstopDashboardHost = "https://staging.dashboard.pitstopconnect.com";
+      const pitstopDashboardEntryPath = "/login/geotab";
+      const pitstopFrame = window.frames["pitstop"];
+
+      function receivedMessage(event) {
+        if (!isValidOrigin(event.origin, pitstopDashboardHost)) {
+          console.log('Invalid origin!')
+          return
+        }
+        console.log(`GEOTAB: receivedMessage(${JSON.stringify(event.data)})`)
+        if (sessionWasSent === false && event.data === 'get_credentials') {
           api.getSession((session) => {
             sessionWasSent = true;
-            window.frames["pitstop"].postMessage(session, '*');
+            sendMessage(session);
           });
         }
-        if (listenerWasAdded === false) {
-          window.addEventListener("message", receiveMessage, false);
-        }
-        window.frames["pitstop"].location = "https://staging.dashboard.pitstopconnect.com/login/geotab";
+      }
+
+      function sendMessage(message) {
+        pitstopFrame.postMessage(message, pitstopDashboardHost);
+      }
+
+      function isValidOrigin(origin, pitstopDashboardHost) {
+        return origin === pitstopDashboardHost
+      }
+
+      function registerListener() {
+        if (listenerRegistered === true) return;
+        listenerRegistered = true
+        window.addEventListener("message", receivedMessage, false);
+      }
+
+      redirectToPitstop = () => {
+        pitstopFrame.location = pitstopDashboardHost + pitstopDashboardEntryPath;
       };
+
       geotab.addin.myCustomPage1 = () => {
         return {
           initialize(_api, state, callback) {
             api = _api;
-            doRedirect();
+            // redirectToPitstop();
             callback();
           },
-          focus(_api, state) {
+          /**
+           * focus() is called whenever the Add-In receives focus.
+           *
+           * The first time the user clicks on the Add-In menu, initialize() will be called and when completed, focus().
+           * focus() will be called again when the Add-In is revisited. Note that focus() will also be called whenever
+           * the global state of the MyGeotab application changes, for example, if the user changes the global group
+           * filter in the UI.
+           *
+           * @param {object} freshApi - The GeotabApi object for making calls to MyGeotab.
+           * @param {object} freshState - The page state object allows access to URL, page navigation and global group filter.
+           */
+          focus(freshApi, freshState) {
+            console.log('focus(freshApi, freshState)')
             // User interface is available
-            api = _api;
-            doRedirect();
+            api = freshApi;
+            registerListener();
+            redirectToPitstop();
           },
-          blur(api, state) {
+          /**
+           * blur() is called whenever the user navigates away from the Add-In.
+           *
+           * Use this function to save the page state or commit changes to a data store or release memory.
+           *
+           * @param {object} freshApi - The GeotabApi object for making calls to MyGeotab.
+           * @param {object} freshState - The page state object allows access to URL, page navigation and global group filter.
+           */
+          blur(freshApi, freshState) {
+            console.log('blur(freshApi, freshState)')
             // Save any Add-In state
           }
         };
