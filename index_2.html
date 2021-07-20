@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Pitstop Dashboard</title>
+  <script>
+    (() => {
+      let api;
+      let sessionWasSent = false;
+      let listenerRegistered = false;
+      const pitstopDashboardHost = 'https://dashboard.pitstopconnect.com';
+      const pitstopDashboardEntryPath = '/login/geotab';
+      const pitstopFrame = window.frames['pitstop_2'];
+
+      function receivedMessage(event) {
+        if (!isValidOrigin(event.origin, pitstopDashboardHost)) {
+          console.log('Invalid origin!');
+          return;
+        }
+
+        console.log(`GEOTAB: ${JSON.stringify(event.data)}`);
+
+        const data = event.data;
+        if (data === undefined) return;
+
+        if (sessionWasSent === false && data.type === 'get_credentials') {
+          api.getSession((session) => {
+            sessionWasSent = true;
+            console.log(`GEOTAB: ${session}`);
+            sendMessage({
+              requestId: data.requestId,
+              data: session
+            });
+          });
+        }
+
+        else if (data.type === 'set_cookie') {
+          setCookie('pitstop_' + data.name, data.value);
+        }
+
+        else if (data.type === 'get_cookie') {
+          const responseData = getCookie('pitstop_' + data.name)
+          sendMessage({
+            requestId: data.requestId,
+            data: responseData
+          })
+        } else {
+          sendMessage({
+            requestId: data.requestId
+          })
+        }
+      }
+
+      function sendMessage(message) {
+        console.log(`GEOTAB: responseData ${JSON.stringify(message)}`)
+        pitstopFrame.postMessage(message, pitstopDashboardHost);
+      }
+
+      function isValidOrigin(origin, pitstopDashboardHost) {
+        return origin === pitstopDashboardHost;
+      }
+
+      function registerListener() {
+        if (listenerRegistered === true) return;
+        listenerRegistered = true;
+        window.addEventListener('message', receivedMessage, false);
+      }
+
+      // cookie handling
+      function setCookie(name, value, days) {
+        let expires = '';
+        if (days) {
+          const date = new Date();
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+          expires = '; expires=' + date.toUTCString();
+        }
+        document.cookie = name + '=' + (value || '') + expires + '; path=/';
+      }
+
+      function getCookie(name) {
+        const nameEQ = name + '=';
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+      }
+
+      function eraseCookie(name) {
+        document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      }
+
+      redirectToPitstop = () => {
+        pitstopFrame.location = pitstopDashboardHost + pitstopDashboardEntryPath;
+      };
+
+      geotab.addin.myCustomPage1 = () => {
+        return {
+          initialize(_api, state, callback) {
+            api = _api;
+            // redirectToPitstop();
+            callback();
+          },
+          /**
+           * focus() is called whenever the Add-In receives focus.
+           *
+           * The first time the user clicks on the Add-In menu, initialize() will be called and when completed, focus().
+           * focus() will be called again when the Add-In is revisited. Note that focus() will also be called whenever
+           * the global state of the MyGeotab application changes, for example, if the user changes the global group
+           * filter in the UI.
+           *
+           * @param {object} freshApi - The GeotabApi object for making calls to MyGeotab.
+           * @param {object} freshState - The page state object allows access to URL, page navigation and global group filter.
+           */
+          focus(freshApi, freshState) {
+            console.log('focus(freshApi, freshState)');
+            // User interface is available
+            api = freshApi;
+            registerListener();
+            redirectToPitstop();
+          },
+          /**
+           * blur() is called whenever the user navigates away from the Add-In.
+           *
+           * Use this function to save the page state or commit changes to a data store or release memory.
+           *
+           * @param {object} freshApi - The GeotabApi object for making calls to MyGeotab.
+           * @param {object} freshState - The page state object allows access to URL, page navigation and global group filter.
+           */
+          blur(freshApi, freshState) {
+            console.log('blur(freshApi, freshState)');
+            // Save any Add-In state
+          }
+        };
+      };
+    })();
+  </script>
+</head>
+
+<body>
+<iframe name="pitstop_2" style="position: absolute; height: 100%; width: 100%; border: none"></iframe>
+</body>
+
+</html>
+
