@@ -10,11 +10,15 @@
       let listenerRegistered = false;
       const pitstopDashboardHost = 'https://dashboard.pitstopconnect.com';
       const pitstopDashboardEntryPath = '/login/geotab';
-      const pitstopFrame = window.frames['pitstop_2'];
+      let pitstopFrame;
+
+      function getNewPitstopFrame() {
+        return window.frames['pitstop_2'];
+      }
 
       function receivedMessage(event) {
         if (!isValidOrigin(event.origin, pitstopDashboardHost)) {
-          console.log('Invalid origin!');
+          console.log(`Invalid origin!: ${event.origin}`);
           return;
         }
 
@@ -100,7 +104,6 @@
         return {
           initialize(_api, state, callback) {
             api = _api;
-            // redirectToPitstop();
             callback();
           },
           /**
@@ -115,9 +118,9 @@
            * @param {object} freshState - The page state object allows access to URL, page navigation and global group filter.
            */
           focus(freshApi, freshState) {
-            console.log('focus(freshApi, freshState)');
             // User interface is available
             api = freshApi;
+            pitstopFrame = getNewPitstopFrame();
             registerListener();
             redirectToPitstop();
           },
@@ -130,9 +133,8 @@
            * @param {object} freshState - The page state object allows access to URL, page navigation and global group filter.
            */
           blur(freshApi, freshState) {
-            console.log('blur(freshApi, freshState)');
             // Save any Add-In state
-          }
+          } 
         };
       };
     })();
